@@ -1,34 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { readFileSync } from "fs";
-
-const tools: Anthropic.Tool[] = [
-  {
-    name: "read_file",
-    description: "read the contents of a file, returns the full text.",
-    input_schema: {
-      type: "object",
-      properties: {
-        file_path: {
-          type: "string",
-          description: "The path of the file, format 'path/filename', e.g., 'documents/notes.txt'",
-        },
-      },
-      required: ["file_path"],
-    },
-  },
-];
-
-function executeTool(toolName: string, input: any): string {
-  if (toolName === "read_file") {
-    try {
-      return readFileSync(input.file_path, "utf-8");
-    } catch (error) {
-      console.error(`Error reading file: ${error}`);
-      return `Error reading file: ${error}`;
-    }
-  }
-  return `Unknown tool: ${toolName}`;
-}
+import { toolDefinitions, executeTool} from "./tools";
 
 export class Agent {
   // Run the Anthropic protocol through a local copilot-api proxy, backed by your GitHub Copilot subscription.
@@ -49,7 +20,7 @@ export class Agent {
       const response = await this.client.messages.create({
         model: this.model,
         max_tokens: 4096,
-        tools,
+        tools: toolDefinitions,
         messages: this.messages,
       });
 
@@ -71,7 +42,7 @@ export class Agent {
       const toolResults: Anthropic.ToolResultBlockParam[] = [];
       for (const tu of toolUses) {
         console.log(`\n  → ${tu.name}(${JSON.stringify(tu.input)})`);
-        const result = executeTool(tu.name, tu.input);
+        const result = await executeTool(tu.name, tu.input as Record<string, any>);
         toolResults.push({
           type: "tool_result",
           tool_use_id: tu.id,
