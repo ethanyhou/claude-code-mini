@@ -8,26 +8,6 @@ const client = new OpenAI({
 
 const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
 
-const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
-  {
-    type: "function",
-    function: {
-      name: "read_file",
-      description: "read the contents of a file, returns the full text.",
-      parameters: {
-        type: "object",
-        properties: {
-          location: {
-            type: "string",
-            description: "The path of the file, format 'path/filename', e.g., 'documents/notes.txt'",
-          },
-        },
-        required: ["location"],
-      },
-    },
-  },
-];
-
 async function chat(userMessage: string) {
   // 1. 把用户消息塞进历史
   messages.push({ role: "user", content: userMessage });
